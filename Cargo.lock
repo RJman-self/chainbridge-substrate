@@ -228,22 +228,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "chainbridge"
-version = "0.0.2"
-source = "git+https://github.com/AcalaNetwork/chainbridge-substrate#6929c6a2d0e81d6dac0280a2e43f0e9510e8fa0c"
-dependencies = [
- "frame-support 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
- "frame-system 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
- "pallet-balances",
- "parity-scale-codec",
- "serde",
- "sp-core 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
- "sp-io 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
- "sp-runtime 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
- "sp-std 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
-]
-
-[[package]]
 name = "chainx-primitives"
 version = "2.0.9"
 source = "git+https://github.com/chainx-org/ChainX?branch=rococo-v1#4313b9d52d7c3ea50bd1a068d65181d68f6cdfa5"
@@ -437,7 +421,7 @@ checksum = "6576a1755ddffd988788025e75bce9e74b018f7cc226198fe931d077911c6d7e"
 name = "example-erc721"
 version = "0.0.1"
 dependencies = [
- "chainbridge 0.0.2",
+ "chainbridge",
  "frame-support 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
  "frame-system 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
  "pallet-balances",
@@ -453,7 +437,7 @@ dependencies = [
 name = "example-pallet"
 version = "0.0.1"
 dependencies = [
- "chainbridge 0.0.2",
+ "chainbridge",
  "example-erc721",
  "frame-support 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
  "frame-system 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
@@ -853,7 +837,7 @@ checksum = "aaf91faf136cb47367fa430cd46e37a788775e7fa104f8b4bcb3861dc389b724"
 name = "handler"
 version = "0.1.0"
 dependencies = [
- "chainbridge 0.0.2 (git+https://github.com/AcalaNetwork/chainbridge-substrate)",
+ "chainbridge",
  "chainx-primitives",
  "frame-support 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
  "frame-system 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
