@@ -20,10 +20,10 @@ pub mod pallet {
     pub trait Config: frame_system::Config + chainbridge::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-        type Currency: MultiCurrency<Self::AccountId, CurrencyId = AssetId, Balance = Balance>;
+        // type Currency: MultiCurrency<Self::AccountId, CurrencyId = AssetId, Balance = Balance>;
 
-        #[pallet::constant]
-        type NativeCurrencyId: Get<AssetId>;
+        // #[pallet::constant]
+        // type NativeCurrencyId: Get<AssetId>;
 
         type RegistorOrigin: EnsureOrigin<Self::Origin>;
 
@@ -121,24 +121,24 @@ pub mod pallet {
             Ok(().into())
         }
 
-        #[pallet::weight(1_000_000)]
-        #[transactional]
-        pub fn transfer_native_to_bridge(
-            origin: OriginFor<T>,
-            dest_chain_id: chainbridge::ChainId,
-            recipient: Vec<u8>,
-            amount: Balance,
-        ) -> DispatchResultWithPostInfo {
-            let who = ensure_signed(origin)?;
-            Self::do_transfer_to_bridge(
-                &who,
-                T::NativeCurrencyId::get(),
-                dest_chain_id,
-                recipient,
-                amount,
-            )?;
-            Ok(().into())
-        }
+        // #[pallet::weight(1_000_000)]
+        // #[transactional]
+        // pub fn transfer_native_to_bridge(
+        //     origin: OriginFor<T>,
+        //     dest_chain_id: chainbridge::ChainId,
+        //     recipient: Vec<u8>,
+        //     amount: Balance,
+        // ) -> DispatchResultWithPostInfo {
+        //     let who = ensure_signed(origin)?;
+        //     Self::do_transfer_to_bridge(
+        //         &who,
+        //         T::NativeCurrencyId::get(),
+        //         dest_chain_id,
+        //         recipient,
+        //         amount,
+        //     )?;
+        //     Ok(().into())
+        // }
 
         #[pallet::weight(1_000_000)]
         #[transactional]
@@ -154,10 +154,10 @@ pub mod pallet {
 
             if Self::is_origin_chain_resource(resource_id) {
                 // transfer locked tokens from bridge account to receiver
-                T::Currency::transfer(currency_id, &bridge_account_id, &to, amount).unwrap();
+                // T::Currency::transfer(currency_id, &bridge_account_id, &to, amount).unwrap();
             } else {
                 // issue tokens to receiver
-                T::Currency::deposit(currency_id, &to, amount).unwrap();
+                // T::Currency::deposit(currency_id, &to, amount).unwrap();
             }
 
             Ok(().into())
@@ -184,10 +184,10 @@ impl<T: Config> Pallet<T> {
 
         if Self::is_origin_chain_resource(resource_id) {
             // transfer tokens to bridge account to lock
-            T::Currency::transfer(currency_id, &from, &bridge_account_id, amount).unwrap();
+            // T::Currency::transfer(currency_id, &from, &bridge_account_id, amount).unwrap();
         } else {
             // burn tokens
-            T::Currency::withdraw(currency_id, &from, amount).unwrap();
+            // T::Currency::withdraw(currency_id, &from, amount).unwrap();
         }
 
         chainbridge::Module::<T>::transfer_fungible(
