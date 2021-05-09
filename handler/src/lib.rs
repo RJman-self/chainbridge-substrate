@@ -1,12 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::unused_unit)]
 
-use chainx_primitives::{AssetId, Balance};
+use chainx_primitives::AssetId;
 use frame_support::{pallet_prelude::*, transactional};
 use frame_system::pallet_prelude::*;
-use orml_traits::MultiCurrency;
 use sp_runtime::SaturatedConversion;
 use sp_std::vec::Vec;
+use xpallet_assets::BalanceOf;
 
 type ResourceId = chainbridge::ResourceId;
 
@@ -17,19 +17,17 @@ pub mod pallet {
     use super::*;
 
     #[pallet::config]
-    pub trait Config: frame_system::Config + chainbridge::Config {
+    pub trait Config: frame_system::Config + chainbridge::Config + xpallet_assets::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-        // type Currency: MultiCurrency<Self::AccountId, CurrencyId = AssetId, Balance = Balance>;
-
-        // #[pallet::constant]
-        // type NativeCurrencyId: Get<AssetId>;
-
-        type RegistorOrigin: EnsureOrigin<Self::Origin>;
+        type RegistorOrigin: EnsureOrigin<<Self as frame_system::Config>::Origin>;
 
         /// Specifies the origin check provided by the bridge for calls that can
         /// only be called by the bridge pallet
-        type BridgeOrigin: EnsureOrigin<Self::Origin, Success = Self::AccountId>;
+        type BridgeOrigin: EnsureOrigin<
+            <Self as frame_system::Config>::Origin,
+            Success = <Self as frame_system::Config>::AccountId,
+        >;
     }
 
     #[pallet::error]
@@ -59,7 +57,7 @@ pub mod pallet {
     pub type CurrencyIds<T: Config> = StorageMap<_, Twox64Concat, ResourceId, AssetId, OptionQuery>;
 
     #[pallet::hooks]
-    impl<T: Config> Hooks<T::BlockNumber> for Pallet<T> {}
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
@@ -76,16 +74,6 @@ pub mod pallet {
                     && !CurrencyIds::<T>::contains_key(resource_id),
                 Error::<T>::ResourceIdAlreadyRegistered,
             );
-
-            // let check_match = if Self::is_origin_chain_resource(resource_id) {
-            //     !matches!(currency_id, CurrencyId::ChainSafe(_))
-            // } else {
-            //     match currency_id {
-            //         CurrencyId::ChainSafe(r_id) => r_id == resource_id,
-            //         _ => false,
-            //     }
-            // };
-            // ensure!(check_match, Error::<T>::ResourceIdCurrencyIdNotMatch);
 
             ResourceIds::<T>::insert(currency_id, resource_id);
             CurrencyIds::<T>::insert(resource_id, currency_id);
@@ -114,51 +102,26 @@ pub mod pallet {
             currency_id: AssetId,
             dest_chain_id: chainbridge::ChainId,
             recipient: Vec<u8>,
-            amount: Balance,
+            amount: BalanceOf<T>,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
-            Self::do_transfer_to_bridge(&who, currency_id, dest_chain_id, recipient, amount)?;
+            Self::do_transfer_to_bridge(who, currency_id, dest_chain_id, recipient, amount)?;
             Ok(().into())
         }
-
-        // #[pallet::weight(1_000_000)]
-        // #[transactional]
-        // pub fn transfer_native_to_bridge(
-        //     origin: OriginFor<T>,
-        //     dest_chain_id: chainbridge::ChainId,
-        //     recipient: Vec<u8>,
-        //     amount: Balance,
-        // ) -> DispatchResultWithPostInfo {
-        //     let who = ensure_signed(origin)?;
-        //     Self::do_transfer_to_bridge(
-        //         &who,
-        //         T::NativeCurrencyId::get(),
-        //         dest_chain_id,
-        //         recipient,
-        //         amount,
-        //     )?;
-        //     Ok(().into())
-        // }
 
         #[pallet::weight(1_000_000)]
         #[transactional]
         pub fn transfer_from_bridge(
             origin: OriginFor<T>,
-            to: T::AccountId,
-            amount: Balance,
+            to: <T as frame_system::Config>::AccountId,
+            amount: BalanceOf<T>,
             resource_id: ResourceId,
         ) -> DispatchResultWithPostInfo {
             let bridge_account_id = T::BridgeOrigin::ensure_origin(origin)?;
             let currency_id =
                 Self::currency_ids(resource_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
-            if Self::is_origin_chain_resource(resource_id) {
-                // transfer locked tokens from bridge account to receiver
-                // T::Currency::transfer(currency_id, &bridge_account_id, &to, amount).unwrap();
-            } else {
-                // issue tokens to receiver
-                // T::Currency::deposit(currency_id, &to, amount).unwrap();
-            }
+            xpallet_assets::Module::<T>::issue(&currency_id, &to, amount);
 
             Ok(().into())
         }
@@ -167,11 +130,11 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
     fn do_transfer_to_bridge(
-        from: &T::AccountId,
+        from: <T as frame_system::Config>::AccountId,
         currency_id: AssetId,
         dest_chain_id: chainbridge::ChainId,
         recipient: Vec<u8>,
-        amount: Balance,
+        amount: BalanceOf<T>,
     ) -> DispatchResult {
         ensure!(
             chainbridge::Module::<T>::chain_whitelisted(dest_chain_id),
@@ -182,13 +145,7 @@ impl<T: Config> Pallet<T> {
         let resource_id =
             Self::resource_ids(currency_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
-        if Self::is_origin_chain_resource(resource_id) {
-            // transfer tokens to bridge account to lock
-            // T::Currency::transfer(currency_id, &from, &bridge_account_id, amount).unwrap();
-        } else {
-            // burn tokens
-            // T::Currency::withdraw(currency_id, &from, amount).unwrap();
-        }
+        xpallet_assets::Module::<T>::destroy_usable(&currency_id, &from, amount);
 
         chainbridge::Module::<T>::transfer_fungible(
             dest_chain_id,
@@ -196,10 +153,5 @@ impl<T: Config> Pallet<T> {
             recipient,
             sp_core::U256::from(amount.saturated_into::<u128>()),
         )
-    }
-
-    fn is_origin_chain_resource(resource_id: ResourceId) -> bool {
-        let origin_chain_id = <T as chainbridge::Config>::ChainId::get();
-        resource_id[31] == origin_chain_id
     }
 }
