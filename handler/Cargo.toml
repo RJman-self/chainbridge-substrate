@@ -16,6 +16,8 @@ sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 chainx-primitives = { git = "https://github.com/chainx-org/ChainX",  branch = "rococo-v1", default-features = false  }
 xpallet-assets = { git = "https://github.com/chainx-org/ChainX",  branch = "rococo-v1", default-features = false }
+xpallet-assets-registrar = { git = "https://github.com/chainx-org/ChainX",  branch = "rococo-v1", default-features = false , optional = true }
+
 
 # ChainBridge
 chainbridge = { path = "../chainbridge", default-features = false}
@@ -32,5 +34,6 @@ std = [
 	"sp-runtime/std",
 	"chainx-primitives/std",
 	"xpallet-assets/std",
+	"xpallet-assets-registrar",
 	"chainbridge/std",
 ]

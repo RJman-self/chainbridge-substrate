@@ -10,6 +10,8 @@ use xpallet_assets::BalanceOf;
 
 type ResourceId = chainbridge::ResourceId;
 
+// mod mock;
+
 pub use pallet::*;
 
 #[frame_support::pallet]
@@ -114,7 +116,7 @@ pub mod pallet {
             amount: BalanceOf<T>,
             resource_id: ResourceId,
         ) -> DispatchResultWithPostInfo {
-            let _bridge_account_id = T::BridgeOrigin::ensure_origin(origin)?;
+            // let _bridge_account_id = T::BridgeOrigin::ensure_origin(origin)?;
             let currency_id =
                 Self::currency_ids(resource_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
@@ -138,7 +140,7 @@ impl<T: Config> Pallet<T> {
             Error::<T>::InvalidDestChainId
         );
 
-        let _bridge_account_id = chainbridge::Module::<T>::account_id();
+        // let _bridge_account_id = chainbridge::Module::<T>::account_id();
         let resource_id =
             Self::resource_ids(currency_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
