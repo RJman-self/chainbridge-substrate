@@ -20,14 +20,11 @@ pub mod pallet {
     pub trait Config: frame_system::Config + chainbridge::Config + xpallet_assets::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-        type RegistorOrigin: EnsureOrigin<<Self as frame_system::Config>::Origin>;
+        type RegistorOrigin: EnsureOrigin<Self::Origin>;
 
         /// Specifies the origin check provided by the bridge for calls that can
         /// only be called by the bridge pallet
-        type BridgeOrigin: EnsureOrigin<
-            <Self as frame_system::Config>::Origin,
-            Success = <Self as frame_system::Config>::AccountId,
-        >;
+        type BridgeOrigin: EnsureOrigin<Self::Origin, Success = Self::AccountId>;
     }
 
     #[pallet::error]
@@ -113,15 +110,15 @@ pub mod pallet {
         #[transactional]
         pub fn transfer_from_bridge(
             origin: OriginFor<T>,
-            to: <T as frame_system::Config>::AccountId,
+            to: T::AccountId,
             amount: BalanceOf<T>,
             resource_id: ResourceId,
         ) -> DispatchResultWithPostInfo {
-            let bridge_account_id = T::BridgeOrigin::ensure_origin(origin)?;
+            let _bridge_account_id = T::BridgeOrigin::ensure_origin(origin)?;
             let currency_id =
                 Self::currency_ids(resource_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
-            xpallet_assets::Module::<T>::issue(&currency_id, &to, amount);
+            xpallet_assets::Module::<T>::issue(&currency_id, &to, amount)?;
 
             Ok(().into())
         }
@@ -130,7 +127,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
     fn do_transfer_to_bridge(
-        from: <T as frame_system::Config>::AccountId,
+        from: T::AccountId,
         currency_id: AssetId,
         dest_chain_id: chainbridge::ChainId,
         recipient: Vec<u8>,
@@ -141,11 +138,11 @@ impl<T: Config> Pallet<T> {
             Error::<T>::InvalidDestChainId
         );
 
-        let bridge_account_id = chainbridge::Module::<T>::account_id();
+        let _bridge_account_id = chainbridge::Module::<T>::account_id();
         let resource_id =
             Self::resource_ids(currency_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
-        xpallet_assets::Module::<T>::destroy_usable(&currency_id, &from, amount);
+        xpallet_assets::Module::<T>::destroy_usable(&currency_id, &from, amount)?;
 
         chainbridge::Module::<T>::transfer_fungible(
             dest_chain_id,

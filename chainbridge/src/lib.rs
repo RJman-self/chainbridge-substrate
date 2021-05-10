@@ -7,7 +7,7 @@ use frame_support::{
     ensure,
     traits::{EnsureOrigin, Get},
     weights::{GetDispatchInfo, Pays},
-    Parameter, PalletId,
+    PalletId, Parameter,
 };
 
 use frame_system::{self as system, ensure_root, ensure_signed};
@@ -615,7 +615,7 @@ impl<T: Config> EnsureOrigin<T::Origin> for EnsureBridge<T> {
     }
 
     #[cfg(feature = "runtime-benchmarks")]
-	fn successful_origin() -> T::Origin {
-		T::Origin::from(system::RawOrigin::Signed(MODULE_ID.into_account()))
-	}
+    fn successful_origin() -> T::Origin {
+        T::Origin::from(system::RawOrigin::Signed(MODULE_ID.into_account()))
+    }
 }

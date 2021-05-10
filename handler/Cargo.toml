@@ -14,11 +14,11 @@ sp-std = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1"
 sp-io = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-chainx-primitives = { git = "https://github.com/chainx-org/ChainX",  default-features = false, branch = "rococo-v1" }
+chainx-primitives = { git = "https://github.com/chainx-org/ChainX",  branch = "rococo-v1", default-features = false  }
+xpallet-assets = { git = "https://github.com/chainx-org/ChainX",  branch = "rococo-v1", default-features = false }
+
+# ChainBridge
 chainbridge = { path = "../chainbridge", default-features = false}
-xpallet-assets = { git = "https://github.com/chainx-org/ChainX",  default-features = false, branch = "rococo-v1" }
-# Orml
-orml-traits = { version = "0.4.0", default-features = false }
 
 [features]
 default = ["std"]
@@ -33,5 +33,4 @@ std = [
 	"chainx-primitives/std",
 	"xpallet-assets/std",
 	"chainbridge/std",
-	"orml-traits/std",
 ]
