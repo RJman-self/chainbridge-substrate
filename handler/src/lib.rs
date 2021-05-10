@@ -10,7 +10,8 @@ use xpallet_assets::BalanceOf;
 
 type ResourceId = chainbridge::ResourceId;
 
-// mod mock;
+mod mock;
+mod tests;
 
 pub use pallet::*;
 
@@ -96,7 +97,7 @@ pub mod pallet {
 
         #[pallet::weight(1_000_000)]
         #[transactional]
-        pub fn transfer_to_bridge(
+        pub fn redeem(
             origin: OriginFor<T>,
             currency_id: AssetId,
             dest_chain_id: chainbridge::ChainId,
@@ -104,19 +105,20 @@ pub mod pallet {
             amount: BalanceOf<T>,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
-            Self::do_transfer_to_bridge(who, currency_id, dest_chain_id, recipient, amount)?;
+            Self::destroy(who, currency_id, dest_chain_id, recipient, amount)?;
             Ok(().into())
         }
 
         #[pallet::weight(1_000_000)]
         #[transactional]
-        pub fn transfer_from_bridge(
+        pub fn deposit(
             origin: OriginFor<T>,
             to: T::AccountId,
             amount: BalanceOf<T>,
             resource_id: ResourceId,
         ) -> DispatchResultWithPostInfo {
-            // let _bridge_account_id = T::BridgeOrigin::ensure_origin(origin)?;
+            T::BridgeOrigin::ensure_origin(origin)?;
+
             let currency_id =
                 Self::currency_ids(resource_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
@@ -128,7 +130,7 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-    fn do_transfer_to_bridge(
+    fn destroy(
         from: T::AccountId,
         currency_id: AssetId,
         dest_chain_id: chainbridge::ChainId,
@@ -140,7 +142,6 @@ impl<T: Config> Pallet<T> {
             Error::<T>::InvalidDestChainId
         );
 
-        // let _bridge_account_id = chainbridge::Module::<T>::account_id();
         let resource_id =
             Self::resource_ids(currency_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
