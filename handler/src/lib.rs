@@ -66,7 +66,7 @@ pub mod pallet {
         pub fn register_resource_id(
             origin: OriginFor<T>,
             resource_id: ResourceId,
-            currency_id: AssetId,
+            #[pallet::compact] currency_id: AssetId,
         ) -> DispatchResultWithPostInfo {
             T::RegistorOrigin::ensure_origin(origin)?;
             ensure!(
@@ -99,10 +99,10 @@ pub mod pallet {
         #[transactional]
         pub fn redeem(
             origin: OriginFor<T>,
-            currency_id: AssetId,
+            #[pallet::compact] currency_id: AssetId,
             dest_chain_id: chainbridge::ChainId,
             recipient: Vec<u8>,
-            amount: BalanceOf<T>,
+            #[pallet::compact] amount: BalanceOf<T>,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
             Self::destroy(who, currency_id, dest_chain_id, recipient, amount)?;
@@ -114,7 +114,7 @@ pub mod pallet {
         pub fn deposit(
             origin: OriginFor<T>,
             to: T::AccountId,
-            amount: BalanceOf<T>,
+            #[pallet::compact] amount: BalanceOf<T>,
             resource_id: ResourceId,
         ) -> DispatchResultWithPostInfo {
             T::BridgeOrigin::ensure_origin(origin)?;
