@@ -4,6 +4,7 @@
 use chainx_primitives::AssetId;
 use frame_support::{pallet_prelude::*, transactional};
 use frame_system::pallet_prelude::*;
+use sp_runtime::traits::StaticLookup;
 use sp_runtime::SaturatedConversion;
 use sp_std::vec::Vec;
 use xpallet_assets::BalanceOf;
@@ -17,6 +18,7 @@ pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
+
     use super::*;
 
     #[pallet::config]
@@ -113,7 +115,7 @@ pub mod pallet {
         #[transactional]
         pub fn deposit(
             origin: OriginFor<T>,
-            to: T::AccountId,
+            to: <T::Lookup as StaticLookup>::Source,
             #[pallet::compact] amount: BalanceOf<T>,
             resource_id: ResourceId,
         ) -> DispatchResultWithPostInfo {
@@ -122,6 +124,7 @@ pub mod pallet {
             let currency_id =
                 Self::currency_ids(resource_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
+            let to = T::Lookup::lookup(to)?;
             xpallet_assets::Module::<T>::issue(&currency_id, &to, amount)?;
 
             Ok(().into())
@@ -131,7 +134,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
     fn destroy(
-        from: T::AccountId,
+        from: <T::Lookup as StaticLookup>::Source,
         currency_id: AssetId,
         dest_chain_id: chainbridge::ChainId,
         recipient: Vec<u8>,
@@ -145,6 +148,7 @@ impl<T: Config> Pallet<T> {
         let resource_id =
             Self::resource_ids(currency_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
+        let from = T::Lookup::lookup(from)?;
         xpallet_assets::Module::<T>::destroy_usable(&currency_id, &from, amount)?;
 
         chainbridge::Module::<T>::transfer_fungible(
