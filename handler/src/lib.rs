@@ -134,7 +134,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
     fn destroy(
-        from: <T::Lookup as StaticLookup>::Source,
+        from: T::AccountId,
         currency_id: AssetId,
         dest_chain_id: chainbridge::ChainId,
         recipient: Vec<u8>,
@@ -148,7 +148,6 @@ impl<T: Config> Pallet<T> {
         let resource_id =
             Self::resource_ids(currency_id).ok_or(Error::<T>::ResourceIdNotRegistered)?;
 
-        let from = T::Lookup::lookup(from)?;
         xpallet_assets::Module::<T>::destroy_usable(&currency_id, &from, amount)?;
 
         chainbridge::Module::<T>::transfer_fungible(
